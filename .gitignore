@@ -1,0 +1,7 @@
+build
+checksums
+.tmp/
+.settings/
+# Ignore Gradle project-specific cache directory
+.gradle
+output
