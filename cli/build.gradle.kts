@@ -17,6 +17,7 @@ val guavaVersion: String by properties
 val cliktVersion: String by properties
 val kotlinxSerializationVersion: String by properties
 val fuelVersion: String by properties
+val ktshVersion: String by properties
 
 repositories {
     mavenLocal()
@@ -30,6 +31,7 @@ dependencies {
     implementation("com.github.ajalt:clikt:$cliktVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     implementation("com.github.kittinunf.fuel:fuel-jvm:$fuelVersion")
+    implementation("com.jaredrummler:ktsh:$ktshVersion")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
