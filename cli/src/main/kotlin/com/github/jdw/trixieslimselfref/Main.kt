@@ -7,18 +7,11 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.jdw.trixieslimselfref.github.Branch
-import com.github.jdw.trixieslimselfref.subcommands.cron.Cron
-import com.github.jdw.trixieslimselfref.subcommands.cron.Settings
+import com.github.jdw.trixieslimselfref.subcommands.upstream.Upstream
 import com.github.jdw.trixieslimselfref.subcommands.general.General
-import echt
-import fuel.httpGet
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlin.system.exitProcess
+import com.github.jdw.trixieslimselfref.subcommands.git.Git
 
-class Cli: CliktCommand(name="cli.sh") {
+class Cli: CliktCommand(name="trixie-slim-selfref") {
     val verbose by option("-v", "--verbose", help="Verbose output (default: false).").flag()
 
     override fun run() {
@@ -29,7 +22,7 @@ class Cli: CliktCommand(name="cli.sh") {
 
 fun main(args: Array<String>)  {
     Cli()
-        .subcommands(Cron(), General())
+        .subcommands(Upstream(), General()/*, Git()*/)
         .main(args)
 }
 
