@@ -28,6 +28,11 @@ class Git: CliktCommand(help="Git tasks subcommand", printHelpOnEmptyArgs = true
 					.doch { Glob.exitProcess("Failed to change PWD to '$dir}'", Glob.ExitCodes.FAILED_ENTER_DIR) }
 			}
 
+			bash.run(Glob.settings.git.commands.pull).also { result ->
+				(result.exitCode == 0)
+					.echt { Glob.message(result.stdout()) }
+					.doch { Glob.exitProcess(result.stderr(), Glob.ExitCodes.FAILED_PULLING_BRANCH) }
+			}
 
 			exitProcess(Glob.ExitCodes.ALL_OK.ordinal)
 		}
