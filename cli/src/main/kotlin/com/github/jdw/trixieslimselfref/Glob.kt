@@ -27,7 +27,8 @@ object Glob { // The global object
 		CRON_FAILED_ENTER_CHECKSUMS_BRANCH_DIR, // exit code 16
 		CRON_FAILED_GETTING_DIFF, // exit code 17
 		CRON_FAILED_COMMIT_AND_PUSH, // exit code 17
-		CRON_FAILED_SAVING_CHECKSUM // exit code 18
+		CRON_FAILED_SAVING_CHECKSUM, // exit code 18
+		CRON_FAILED_PULLING_CHECKSUMS // exit code 19
 	}
 
 	fun message(msg: String, error: Boolean = false) {

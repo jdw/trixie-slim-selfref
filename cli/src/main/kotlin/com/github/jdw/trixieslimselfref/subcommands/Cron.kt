@@ -94,6 +94,13 @@ class Cron(): CliktCommand(help = "Crontab management subcommand") {
 					{ true }
 				),
 				Commandos(
+					"""git pull""",
+					"Failed pulling checksums branch!",
+					{ _ -> Glob.message("Successfully pulled checksums branch.") },
+					Glob.ExitCodes.CRON_FAILED_PULLING_CHECKSUMS,
+					{ true }
+				),
+				Commandos(
 					"""git diff | grep "+++" | wc -l""",
 					"Failed getting diff of repository!",
 					{ result ->
