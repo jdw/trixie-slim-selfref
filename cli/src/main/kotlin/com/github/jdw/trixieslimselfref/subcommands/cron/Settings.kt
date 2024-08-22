@@ -1,4 +1,4 @@
-package com.github.jdw.trixieslimselfref.subcommands
+package com.github.jdw.trixieslimselfref.subcommands.cron
 
 import kotlinx.serialization.Serializable
 

@@ -1,4 +1,4 @@
-package com.github.jdw.trixieslimselfref.subcommands
+package com.github.jdw.trixieslimselfref.subcommands.cron
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
@@ -26,10 +26,7 @@ class Cron(): CliktCommand(help = "Crontab management subcommand") {
 	private val echoSettingsSkeleton by option(help = "Pretty prints a default settings file for this subcommand and exits.").flag()
 
 	override fun run() {
-		(!checkForNewChecksums && !checkSettings && !echoSettingsSkeleton).echt {
-			Glob.message("Nothing to do!", true)
-			exitProcess(Glob.ExitCodes.CRON_NOTHING_TO_DO.ordinal)
-		}
+		(!checkForNewChecksums && !checkSettings && !echoSettingsSkeleton).echt { Glob.exitProcess("Nothing to do!", Glob.ExitCodes.CRON_NOTHING_TO_DO) }
 
 		echoSettingsSkeleton.echt { echoSettingsSkeleton() }
 		checkSettings.echt { checkSettings(settingsDir) }
@@ -39,18 +36,10 @@ class Cron(): CliktCommand(help = "Crontab management subcommand") {
 	companion object {
 		private fun loadSettings(filename: String): Settings {
 			val settingsFile = File(filename)
-			settingsFile.isFile.doch {
-				println("File '${settingsFile.absoluteFile}' not found!")
-				exitProcess(Glob.ExitCodes.CRON_NO_SETTINGS_FILE.ordinal)
-			}
+			settingsFile.isFile.doch { Glob.exitProcess("File '${settingsFile.absoluteFile}' not found!", Glob.ExitCodes.CRON_NO_SETTINGS_FILE) }
 
-			return try {
-				Json.decodeFromString<Settings>(settingsFile.readText())
-			}
-			catch (_: Exception) {
-				Glob.message("Failed to parse file '${settingsFile.absoluteFile}'!", true)
-				exitProcess(Glob.ExitCodes.CRON_SETTINGS_FILE_PARSE_FAIL.ordinal)
-			}
+			return try { Json.decodeFromString<Settings>(settingsFile.readText()) }
+				catch (_: Exception) { Glob.exitProcess("Failed to parse file '${settingsFile.absoluteFile}'!", Glob.ExitCodes.CRON_SETTINGS_FILE_PARSE_FAIL) }
 		}
 
 
