@@ -22,12 +22,22 @@ object Glob { // The global object
 		Could_not_get_checksum_for_architecture, // exit code 12
 		DIRECTORY_DOES_NOT_EXIST_gitChecksumsDir, // exit code 13
 		DIRECTORY_DOES_NOT_EXIST_gitRepoDir, // exit code 13
-		Could_not_get_information_about_branches // exit code 12
+		Could_not_get_information_about_branches, // exit code 14
+		CRON_FAILED_COMMIT_AND_PUSH_CHECKSUMS, // exit code 15
+		CRON_FAILED_ENTER_CHECKSUMS_BRANCH_DIR, // exit code 16
+		CRON_FAILED_GETTING_DIFF, // exit code 17
+		CRON_FAILED_COMMIT_AND_PUSH, // exit code 17
+		CRON_FAILED_SAVING_CHECKSUM // exit code 18
 	}
 
 	fun message(msg: String, error: Boolean = false) {
 		error
 			.echt { println("ERROR :: $msg") }
 			.doch { Glob.verbose.echt { println(msg) } }
+	}
+
+	fun exitProcess(errorMsg: String, exitCode: ExitCodes): Nothing {
+		Glob.message(errorMsg, true)
+		kotlin.system.exitProcess(exitCode.ordinal)
 	}
 }
