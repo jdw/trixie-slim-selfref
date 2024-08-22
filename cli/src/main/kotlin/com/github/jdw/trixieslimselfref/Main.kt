@@ -7,7 +7,16 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.jdw.trixieslimselfref.subcommands.Cron
+import com.github.jdw.trixieslimselfref.github.Branch
+import com.github.jdw.trixieslimselfref.subcommands.cron.Cron
+import com.github.jdw.trixieslimselfref.subcommands.cron.Settings
+import com.github.jdw.trixieslimselfref.subcommands.general.General
+import echt
+import fuel.httpGet
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlin.system.exitProcess
 
 class Cli: CliktCommand(name="cli.sh") {
     val verbose by option("-v", "--verbose", help="Verbose output (default: false).").flag()
@@ -20,7 +29,7 @@ class Cli: CliktCommand(name="cli.sh") {
 
 fun main(args: Array<String>)  {
     Cli()
-        .subcommands(Cron())
+        .subcommands(Cron(), General())
         .main(args)
 }
 
