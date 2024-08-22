@@ -29,6 +29,7 @@ class Upstream(): CliktCommand(help = "Upstream management subcommand", printHel
 						.echt {
 							val bash = Shell(Glob.settings.shell)
 							val file = File("${Glob.settings.git.branches.checksumsDir}/checksums/$arch.sha256")
+
 							val fetchedChecksum = String(response.body.bytes()).trim()
 							val storedChecksum = if (file.exists()) file.readText().trim() else "File '${file.absolutePath}' not found!"
 
@@ -70,7 +71,9 @@ class Upstream(): CliktCommand(help = "Upstream management subcommand", printHel
 					{ result ->
 						amountOfDiffingFiles = result.output().trim().toInt()
 						val message = "Found $amountOfDiffingFiles new checksum${ if (amountOfDiffingFiles == 1) "" else "s" }..."
-						if (Glob.verbose || amountOfDiffingFiles != 0) Glob.webhookMessage(message)
+
+            if (Glob.verbose || amountOfDiffingFiles != 0) Glob.webhookMessage(message)
+
 						Glob.message(message)
 					},
 					Glob.ExitCodes.CRON_FAILED_GETTING_DIFF,

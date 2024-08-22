@@ -11,7 +11,7 @@ import com.github.jdw.trixieslimselfref.subcommands.upstream.Upstream
 import com.github.jdw.trixieslimselfref.subcommands.general.General
 import com.github.jdw.trixieslimselfref.subcommands.git.Git
 
-class Cli: CliktCommand(
+class Main: CliktCommand(
     name="trixie-slim-selfref",
     printHelpOnEmptyArgs = true,
     help = """ A CLI tool with the purpose of building a Docker image based on debian:trixie-slim that can build itself - Much wow!
@@ -28,7 +28,7 @@ class Cli: CliktCommand(
 
 
 fun main(args: Array<String>)  {
-    Cli()
+    Main()
         .subcommands(Upstream(), General(), Git())
         .main(args)
 }
