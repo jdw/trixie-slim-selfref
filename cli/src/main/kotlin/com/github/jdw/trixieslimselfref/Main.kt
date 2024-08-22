@@ -7,19 +7,19 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.jdw.trixieslimselfref.github.Branch
-import com.github.jdw.trixieslimselfref.subcommands.cron.Cron
-import com.github.jdw.trixieslimselfref.subcommands.cron.Settings
+import com.github.jdw.trixieslimselfref.subcommands.upstream.Upstream
 import com.github.jdw.trixieslimselfref.subcommands.general.General
-import echt
-import fuel.httpGet
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlin.system.exitProcess
+import com.github.jdw.trixieslimselfref.subcommands.git.Git
 
-class Cli: CliktCommand(name="cli.sh") {
-    val verbose by option("-v", "--verbose", help="Verbose output (default: false).").flag()
+class Cli: CliktCommand(
+    name="trixie-slim-selfref",
+    printHelpOnEmptyArgs = true,
+    help = """ A CLI tool with the purpose of building a Docker image based on debian:trixie-slim that can build itself - Much wow!
+        
+             Please peruse the README.md through the 🫡 general setting or visit github.com/jdw/trixie-slim-selfref for more!
+            
+            --- 🫶 Happy hacking! ⌨️ ---""") {
+    val verbose by option("-v", "--verbose", help="Verbose output").flag()
 
     override fun run() {
         Glob.verbose = verbose
@@ -29,7 +29,7 @@ class Cli: CliktCommand(name="cli.sh") {
 
 fun main(args: Array<String>)  {
     Cli()
-        .subcommands(Cron(), General())
+        .subcommands(Upstream(), General(), Git())
         .main(args)
 }
 
