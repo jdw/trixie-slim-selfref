@@ -4,46 +4,111 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.jdw.trixieslimselfref.Glob
+import com.github.jdw.trixieslimselfref.github.Branch
 import doch
 import echt
+import fuel.httpGet
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import kotlin.system.exitProcess
 
-class General: CliktCommand(help="\uD83E\uDEE1 General subcommand") {
+class General: CliktCommand(help="\uD83E\uDEE1 General subcommand", printHelpOnEmptyArgs = true) {
 	private val checkSettings by option(help="Checks correctness of settings relevant for the general subcommand").flag()
-	private val echoSettingsSkeleton by option(help = "Pretty prints a default settings file for the general subcommand and exits.").flag()
+	private val skeleton by option(help = "Pretty prints a default settings file for the general subcommand and exits.").flag()
 
 	override fun run() {
 		checkSettings.echt { checkSettings() }
-		echoSettingsSkeleton.echt { echoSettingsSkeleton() }
+		skeleton.echt { echoSettingsSkeleton() }
 	}
 
 	companion object {
-		private fun loadSettings(filename: String): Settings {
-			val settingsFile = File(filename)
-			settingsFile.isFile.doch { Glob.exitProcess("File '${settingsFile.absoluteFile}' not found!", Glob.ExitCodes.GENERAL_NO_SETTINGS_FILE) }
-
-			return try { Json.decodeFromString<Settings>(settingsFile.readText()) }
-				catch (_: Exception) { Glob.exitProcess("Failed to parse file '${settingsFile.absoluteFile}'!", Glob.ExitCodes.GENERAL_SETTINGS_FILE_PARSE_FAIL) }
-		}
-
 		private fun checkSettings() {
-			val settingsFilename = "${System.getenv("HOME")}/settings.json"
-			val settings = loadSettings(settingsFilename)
-			settings.webhookUrl.isEmpty().echt { Glob.exitProcess("No webhook URL in settings file ('$settingsFilename')!", Glob.ExitCodes.GENERAL_SETTINGS_NO_WEBHOOK_URL_IN_SETTINGS_FILE) }
-			settings.webhookUsername.isEmpty().echt { Glob.exitProcess("No webhook username in settings file ('$settingsFilename')!", Glob.ExitCodes.GENERAL_SETTINGS_NO_WEBHOOK_USERNAME_IN_SETTINGS_FILE) }
+			val (settings, filename) = Glob.loadSettings()
+			settings.webhook.url.isEmpty()
+				.echt { Glob.exitProcess("No webhook URL in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
+				.doch { Glob.message("Webhook URL OK") }
+			settings.webhook.username.isEmpty()
+				.echt { Glob.exitProcess("No webhook username in settings file ('$filename')!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
+				.doch { Glob.message("Webhook username OK") }
+
+			val dir = "${Glob.baseDir}/cron"
+			File(dir).isDirectory
+				.doch { Glob.exitProcess("Settings directory '$dir' not found!", Glob.ExitCodes.DIRECTORY_DOES_NOT_EXIST) }
+				.echt { Glob.message("Settings directory '$dir' OK") }
+
+			// Checking existence of settings
+			settings.architectures.isEmpty()
+				.echt { Glob.exitProcess("No architectures in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
+				.doch { Glob.message("Architectures OK") }
+			settings.git.branches.checksumsDir.isEmpty()
+				.echt { Glob.exitProcess("No data in 'git.branches.checksumsDir' in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
+				.doch { Glob.message("Setting 'git.branches.checksumsDir' OK") }
+			settings.git.branches.mainDir.isEmpty()
+				.echt { Glob.exitProcess("No data in 'git.branches.mainDir' in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
+				.doch { Glob.message("Setting 'git.branches.mainDir' OK") }
+			settings.upstream.checksumUrl.isEmpty()
+				.echt { Glob.exitProcess("No data in 'upstream.checksumUrl' in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
+				.doch { Glob.message("Setting 'upstream.checksumUrl' OK") }
+			settings.upstream.repoApiUrl.isEmpty()
+				.echt { Glob.exitProcess("No data in 'upstream.repoApiUrl' in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
+				.doch { Glob.message("Setting 'upstream.repoApiUrl' OK") }
+			settings.upstream.repoBranchPrefix.isEmpty()
+				.echt { Glob.exitProcess("No data in 'upstream.repoBranchPrefix' in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
+				.doch { Glob.message("Setting 'upstream.repoBranchPrefix' OK") }
+
+			// Checking validity of settings
+			runBlocking {
+				settings.architectures.forEach { arch ->
+					Glob.message("Getting checksum for $arch...")
+					val response = settings.upstream.checksumUrl.replace("__REPLACE_WITH_ARCHITECTURE__", arch).httpGet()
+					(response.statusCode == 200)
+						.echt { Glob.message("\t ... was found to be ${String(response.body.bytes()).trim()}") }
+						.doch { Glob.exitProcess("Could not get checksum for architecture '$arch'!", Glob.ExitCodes.COULD_NOT_GET_CHECKSUM_FOR_ARCHITECTURE) }
+				}
+
+				File(settings.git.branches.checksumsDir).isDirectory
+					.doch { Glob.exitProcess("Directory for 'git.branches.checksumsDir' supposedly at path '${settings.git.branches.checksumsDir}' does not exist!", Glob.ExitCodes.DIRECTORY_DOES_NOT_EXIST) }
+					.echt { Glob.message("Setting 'git.branches.checksumsDir' OK") }
+				File(settings.git.branches.mainDir).isDirectory
+					.doch { Glob.exitProcess("Directory for 'git.branches.mainDir' supposedly at path '${settings.git.branches.mainDir}' does not exist!", Glob.ExitCodes.DIRECTORY_DOES_NOT_EXIST_gitRepoDir) }
+					.echt { Glob.message("Setting 'git.branches.mainDir' OK") }
+				(settings.upstream.repoApiUrl.httpGet().statusCode == 200)
+					.doch { Glob.exitProcess("Could not get information for branches!", Glob.ExitCodes.FAILED_GETTING_INFORMATION_ABOUT_BRANCHES) }
+					.echt { Glob.message("Setting 'upstream.repoApiUrl' OK") }
+
+			}
+
+			exitProcess(Glob.ExitCodes.ALL_OK.ordinal)
 		}
 
 		private fun echoSettingsSkeleton() {
-			val settings = Settings()
-			val json = Json {
-				prettyPrint = true
-				encodeDefaults = true
+			runBlocking {
+				val defaultSettings = Settings()
+				val response = defaultSettings.upstream.repoApiUrl.httpGet()
+
+				(response.statusCode != 200).echt {
+					Glob.message("Failed getting branches information from '${Settings().upstream.repoApiUrl}!'")
+					exitProcess(Glob.ExitCodes.CRON_FAILED_GETTING_BRANCH_NAMES.ordinal)
+				}
+
+				val body = String(response.body.bytes())
+				val allArchitectures = Json.decodeFromString<List<Branch>>(body)
+					.filter { it.name.startsWith(defaultSettings.upstream.repoBranchPrefix) }
+					.map { it.name.replace(defaultSettings.upstream.repoBranchPrefix, "") }
+					.toSet()
+
+				val settings = Settings(architectures = allArchitectures)
+
+				val json = Json {
+					prettyPrint = true
+					encodeDefaults = true
+				}
+
+				println(json.encodeToString(settings))
 			}
 
-			println(json.encodeToString(settings))
 			exitProcess(Glob.ExitCodes.ALL_OK.ordinal)
 		}
 	}
