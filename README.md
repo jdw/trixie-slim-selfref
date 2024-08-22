@@ -34,6 +34,7 @@ Build by running...
 * [Kotlin 2.0](https://kotlinlang.org/docs/whatsnew20.html)
 * [Clikt](https://ajalt.github.io/clikt/)
 * [Fuel](https://github.com/kittinunf/fuel)
+* [KtSh](https://github.com/jaredrummler/KtSh)
 
 ## Branches
 * [main](https://github.com/jdw/trixie-slim-selfref): Live code, what is copied to the image, should be worthy of production 
@@ -42,9 +43,15 @@ Build by running...
 * [checksums](https://github.com/jdw/trixie-slim-selfref/tree/checksums): Used to store the checksums found in Debian docker images repo
 
 # Grab bag
+## Misc data
+View this file by running...
+```bash
+./trixie-slim-selfref.sh general --peruse-readme
+```
+
 ## Misc links
-### Source
 * [this repo](https://github.com/jdw/trixie-slim-selfref)
+* [My personal homepage Paronomasia](https://parono.asia)
 
 ### Upstream
 * [Debian](https://www.debian.org/)

@@ -1,5 +1,6 @@
 package com.github.jdw.trixieslimselfref
 
+import com.github.ajalt.clikt.output.TermUi.echo
 import com.github.jdw.trixieslimselfref.subcommands.general.DiscordWebhookMessage
 import com.github.jdw.trixieslimselfref.subcommands.general.Settings
 import doch
@@ -9,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import kotlin.system.exitProcess
 
 object Glob { // The global object
 	var verbose = false
@@ -41,67 +43,62 @@ object Glob { // The global object
 		GENERAL_SETTINGS_FILE_PARSE_FAIL, // exit code 21
 		SETTINGS_NO_WEBHOOK_URL_IN_SETTINGS_FILE, // exit code 22
 		GENERAL_SETTINGS_NO_WEBHOOK_USERNAME_IN_SETTINGS_FILE, // exit code 23
-		GIT_COMMAND_FAILED // exit code 24
+		GIT_COMMAND_FAILED, // exit code 24
+		FAILED_LOADING_WEBHOOK_URL // exit code 25
 	}
 
 	fun message(msg: String, error: Boolean = false) {
 		error
 			.echt {
 				val totzMsg = "ERROR :: $msg"
-				println(totzMsg)
+				echo(message = totzMsg, err = true)
 				webhookMessage(totzMsg)
 			}
-			.doch { verbose.echt { println(msg) } }
+			.doch { verbose.echt { echo(msg) } }
 	}
 
 	fun exitProcess(errorMsg: String, exitCode: ExitCodes): Nothing {
 		message(errorMsg, true)
-		kotlin.system.exitProcess(exitCode.ordinal)
+		exitProcess(exitCode.ordinal)
 	}
 
 	fun webhookMessage(message: String) {
-		if (settingsCache == null) {
-			println("ERROR :: Wanted to send '$message' to webhook but could not because 'settingsCache' was null!")
-			return
+		val url = System.getenv("DISCORD_WEBHOOK_URL").ifEmpty { settings.webhook.url }
+
+		if (url.isEmpty()) {
+			echo("ERROR :: Can not send message to empty webhook URL!", err = true)
+			kotlin.system.exitProcess(ExitCodes.FAILED_LOADING_WEBHOOK_URL.ordinal)
 		}
-
-		val (settings, _) = settingsCache!!
-
 		runBlocking {
-			val response = settings
-				.webhook
-				.url
-				.httpPost(body = Json.encodeToString(DiscordWebhookMessage(content = message, username = settings.webhook.username)), headers = mapOf("Content-Type" to "application/json"))
-
+			val response = url
+				.httpPost(
+					body = Json.encodeToString(DiscordWebhookMessage(content = message, username = settings.webhook.username)), headers = mapOf("Content-Type" to "application/json"))
 
 			(response.statusCode == 200)
 				.doch {
-					println(String(response.body.bytes()).trim())
+					echo(message = String(response.body.bytes()).trim(), err = true)
 				}
 		}
 	}
 
-	private var settingsCache: Pair<Settings, String>? = null
-	fun loadSettings(): Pair<Settings, String> {
-		return settingsCache ?: run {
-			val settingsFile = File("$baseDir/settings.json")
-			settingsFile.isFile.doch {
-				exitProcess(
-					"File '${settingsFile.absoluteFile}' not found!",
-					ExitCodes.GLOB_SETTINGS_FILE_NOT_FOUND
-				)
-			}
+	val settings: Settings by lazy {
+		val settingsFile = File("$baseDir/settings.json")
+		settingsFile.isFile.doch {
+			System.getenv("DISCORD_WEBHOOK_URL").isEmpty()
+				.echt { echo(message = "ERROR :: \"DISCORD_WEBHOOK_URL\" environment variable not defined!") }
+				.doch { webhookMessage("ERROR :: File '${settingsFile.absoluteFile}' not found!") }
+			echo("ERROR :: File '${settingsFile.absoluteFile}' not found!", err = true)
+			exitProcess(ExitCodes.GLOB_SETTINGS_FILE_NOT_FOUND.ordinal)
+		}
 
-			try {
-				settingsCache = Pair(Json.decodeFromString<Settings>(settingsFile.readText()), settingsFile.absolutePath)
-			} catch (_: Exception) {
-				exitProcess(
-					"Failed to parse file '${settingsFile.absoluteFile}'!",
-					ExitCodes.GLOB_SETTINGS_FILE_PARSE_FAIL
-				)
-			}
-
-			settingsCache!!
+		try {
+			Json.decodeFromString<Settings>(settingsFile.readText())
+		} catch (_: Exception) {
+			System.getenv("DISCORD_WEBHOOK_URL").isEmpty()
+				.echt { echo(message = "ERROR :: \"DISCORD_WEBHOOK_URL\" environment variable not defined!") }
+				.doch { webhookMessage("ERROR :: Failed to parse file '${settingsFile.absoluteFile}'!") }
+			echo(message = "ERROR :: Failed to parse file '${settingsFile.absoluteFile}'!", err = true)
+			exitProcess(ExitCodes.GLOB_SETTINGS_FILE_PARSE_FAIL.ordinal)
 		}
 	}
 }

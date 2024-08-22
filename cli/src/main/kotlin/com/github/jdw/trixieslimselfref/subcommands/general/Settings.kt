@@ -8,7 +8,8 @@ data class Settings(
 	val webhook: Webhook = Webhook(),
 	val architectures: Set<String> = emptySet(),
 	val upstream: UpstreamSettings = UpstreamSettings(),
-	val git: GitSettings = GitSettings()
+	val git: GitSettings = GitSettings(),
+	val shell: String = "/bin/bash"
 )
 
 @Serializable

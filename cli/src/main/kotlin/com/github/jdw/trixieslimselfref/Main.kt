@@ -11,8 +11,15 @@ import com.github.jdw.trixieslimselfref.subcommands.upstream.Upstream
 import com.github.jdw.trixieslimselfref.subcommands.general.General
 import com.github.jdw.trixieslimselfref.subcommands.git.Git
 
-class Cli: CliktCommand(name="trixie-slim-selfref") {
-    val verbose by option("-v", "--verbose", help="Verbose output (default: false).").flag()
+class Main: CliktCommand(
+    name="trixie-slim-selfref",
+    printHelpOnEmptyArgs = true,
+    help = """ A CLI tool with the purpose of building a Docker image based on debian:trixie-slim that can build itself - Much wow!
+        
+             Please peruse the README.md through the 🫡 general setting or visit github.com/jdw/trixie-slim-selfref for more!
+            
+            --- 🫶 Happy hacking! ⌨️ ---""") {
+    val verbose by option("-v", "--verbose", help="Verbose output").flag()
 
     override fun run() {
         Glob.verbose = verbose
@@ -21,8 +28,8 @@ class Cli: CliktCommand(name="trixie-slim-selfref") {
 
 
 fun main(args: Array<String>)  {
-    Cli()
-        .subcommands(Upstream(), General()/*, Git()*/)
+    Main()
+        .subcommands(Upstream(), General(), Git())
         .main(args)
 }
 
