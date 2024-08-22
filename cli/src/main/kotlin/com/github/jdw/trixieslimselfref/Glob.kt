@@ -38,7 +38,7 @@ object Glob { // The global object
 		CRON_FAILED_GETTING_DIFF, // exit code 17
 		CRON_FAILED_COMMIT_AND_PUSH, // exit code 17
 		FAILED_SAVING_CHECKSUM, // exit code 18
-		FAILED_PULLING_CHECKSUMS, // exit code 19
+		FAILED_PULLING_BRANCH, // exit code 19
 		GENERAL_NO_SETTINGS_FILE, // exit code 20
 		GENERAL_SETTINGS_FILE_PARSE_FAIL, // exit code 21
 		SETTINGS_NO_WEBHOOK_URL_IN_SETTINGS_FILE, // exit code 22
