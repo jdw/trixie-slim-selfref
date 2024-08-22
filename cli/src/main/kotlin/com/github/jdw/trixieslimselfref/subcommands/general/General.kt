@@ -1,6 +1,7 @@
 package com.github.jdw.trixieslimselfref.subcommands.general
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.output.TermUi.echo
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.jdw.trixieslimselfref.Glob
@@ -25,56 +26,51 @@ class General: CliktCommand(help="\uD83E\uDEE1 General subcommand", printHelpOnE
 
 	companion object {
 		private fun checkSettings() {
-			val (settings, filename) = Glob.loadSettings()
-			settings.webhook.url.isEmpty()
+			val filename = "${Glob.baseDir}/settings.json"
+			Glob.settings.webhook.url.isEmpty()
 				.echt { Glob.exitProcess("No webhook URL in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
 				.doch { Glob.message("Webhook URL OK") }
-			settings.webhook.username.isEmpty()
+			Glob.settings.webhook.username.isEmpty()
 				.echt { Glob.exitProcess("No webhook username in settings file ('$filename')!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
 				.doch { Glob.message("Webhook username OK") }
 
-			val dir = "${Glob.baseDir}/cron"
-			File(dir).isDirectory
-				.doch { Glob.exitProcess("Settings directory '$dir' not found!", Glob.ExitCodes.DIRECTORY_DOES_NOT_EXIST) }
-				.echt { Glob.message("Settings directory '$dir' OK") }
-
 			// Checking existence of settings
-			settings.architectures.isEmpty()
+			Glob.settings.architectures.isEmpty()
 				.echt { Glob.exitProcess("No architectures in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
 				.doch { Glob.message("Architectures OK") }
-			settings.git.branches.checksumsDir.isEmpty()
+			Glob.settings.git.branches.checksumsDir.isEmpty()
 				.echt { Glob.exitProcess("No data in 'git.branches.checksumsDir' in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
 				.doch { Glob.message("Setting 'git.branches.checksumsDir' OK") }
-			settings.git.branches.mainDir.isEmpty()
+			Glob.settings.git.branches.mainDir.isEmpty()
 				.echt { Glob.exitProcess("No data in 'git.branches.mainDir' in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
 				.doch { Glob.message("Setting 'git.branches.mainDir' OK") }
-			settings.upstream.checksumUrl.isEmpty()
+			Glob.settings.upstream.checksumUrl.isEmpty()
 				.echt { Glob.exitProcess("No data in 'upstream.checksumUrl' in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
 				.doch { Glob.message("Setting 'upstream.checksumUrl' OK") }
-			settings.upstream.repoApiUrl.isEmpty()
+			Glob.settings.upstream.repoApiUrl.isEmpty()
 				.echt { Glob.exitProcess("No data in 'upstream.repoApiUrl' in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
 				.doch { Glob.message("Setting 'upstream.repoApiUrl' OK") }
-			settings.upstream.repoBranchPrefix.isEmpty()
+			Glob.settings.upstream.repoBranchPrefix.isEmpty()
 				.echt { Glob.exitProcess("No data in 'upstream.repoBranchPrefix' in '$filename'!", Glob.ExitCodes.SETTINGS_BAD_DATA) }
 				.doch { Glob.message("Setting 'upstream.repoBranchPrefix' OK") }
 
 			// Checking validity of settings
 			runBlocking {
-				settings.architectures.forEach { arch ->
+				Glob.settings.architectures.forEach { arch ->
 					Glob.message("Getting checksum for $arch...")
-					val response = settings.upstream.checksumUrl.replace("__REPLACE_WITH_ARCHITECTURE__", arch).httpGet()
+					val response = Glob.settings.upstream.checksumUrl.replace("__REPLACE_WITH_ARCHITECTURE__", arch).httpGet()
 					(response.statusCode == 200)
 						.echt { Glob.message("\t ... was found to be ${String(response.body.bytes()).trim()}") }
-						.doch { Glob.exitProcess("Could not get checksum for architecture '$arch'!", Glob.ExitCodes.COULD_NOT_GET_CHECKSUM_FOR_ARCHITECTURE) }
+						.doch { Glob.exitProcess("Could not get checksum for $arch!", Glob.ExitCodes.COULD_NOT_GET_CHECKSUM_FOR_ARCHITECTURE) }
 				}
 
-				File(settings.git.branches.checksumsDir).isDirectory
-					.doch { Glob.exitProcess("Directory for 'git.branches.checksumsDir' supposedly at path '${settings.git.branches.checksumsDir}' does not exist!", Glob.ExitCodes.DIRECTORY_DOES_NOT_EXIST) }
+				File(Glob.settings.git.branches.checksumsDir).isDirectory
+					.doch { Glob.exitProcess("Directory for 'git.branches.checksumsDir' supposedly at path '${Glob.settings.git.branches.checksumsDir}' does not exist!", Glob.ExitCodes.DIRECTORY_DOES_NOT_EXIST) }
 					.echt { Glob.message("Setting 'git.branches.checksumsDir' OK") }
-				File(settings.git.branches.mainDir).isDirectory
-					.doch { Glob.exitProcess("Directory for 'git.branches.mainDir' supposedly at path '${settings.git.branches.mainDir}' does not exist!", Glob.ExitCodes.DIRECTORY_DOES_NOT_EXIST_gitRepoDir) }
+				File(Glob.settings.git.branches.mainDir).isDirectory
+					.doch { Glob.exitProcess("Directory for 'git.branches.mainDir' supposedly at path '${Glob.settings.git.branches.mainDir}' does not exist!", Glob.ExitCodes.DIRECTORY_DOES_NOT_EXIST_gitRepoDir) }
 					.echt { Glob.message("Setting 'git.branches.mainDir' OK") }
-				(settings.upstream.repoApiUrl.httpGet().statusCode == 200)
+				(Glob.settings.upstream.repoApiUrl.httpGet().statusCode == 200)
 					.doch { Glob.exitProcess("Could not get information for branches!", Glob.ExitCodes.FAILED_GETTING_INFORMATION_ABOUT_BRANCHES) }
 					.echt { Glob.message("Setting 'upstream.repoApiUrl' OK") }
 
@@ -106,7 +102,7 @@ class General: CliktCommand(help="\uD83E\uDEE1 General subcommand", printHelpOnE
 					encodeDefaults = true
 				}
 
-				println(json.encodeToString(settings))
+				echo(json.encodeToString(settings))
 			}
 
 			exitProcess(Glob.ExitCodes.ALL_OK.ordinal)
