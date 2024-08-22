@@ -18,10 +18,12 @@ import kotlin.system.exitProcess
 class General: CliktCommand(help="\uD83E\uDEE1 General subcommand", printHelpOnEmptyArgs = true) {
 	private val checkSettings by option(help="Checks correctness of settings relevant for the general subcommand").flag()
 	private val skeleton by option(help = "Pretty prints a default settings file for the general subcommand and exits.").flag()
+	private val peruseReadme by option(help = "Prints the README.md").flag()
 
 	override fun run() {
 		checkSettings.echt { checkSettings() }
 		skeleton.echt { echoSettingsSkeleton() }
+		peruseReadme.echt { peruseReadme() }
 	}
 
 	companion object {
@@ -106,6 +108,11 @@ class General: CliktCommand(help="\uD83E\uDEE1 General subcommand", printHelpOnE
 			}
 
 			exitProcess(Glob.ExitCodes.ALL_OK.ordinal)
+		}
+
+		private fun peruseReadme() {
+			val text = General::class.java.getResource("/README.md")!!.readText()
+			echo(message = text)
 		}
 	}
 }

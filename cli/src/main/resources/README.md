@@ -45,7 +45,6 @@ Build by running...
 # Grab bag
 ## Misc data
 View this file by running...
-
 ```bash
 ./trixie-slim-selfref.sh general --peruse-readme
 ```
